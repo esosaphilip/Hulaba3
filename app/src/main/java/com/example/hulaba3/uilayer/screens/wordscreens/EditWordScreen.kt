@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.hulaba3.data.database.Word
-import com.example.hulaba3.utils.SpacedRepetitionHelper
 import com.example.hulaba3.viewmodel.WordViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -42,16 +41,18 @@ fun EditWordScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
     var word by remember { mutableStateOf("") }
     var meaning by remember { mutableStateOf("") }
     var example by remember { mutableStateOf("") }
+    var originalWord by remember { mutableStateOf<Word?>(null) }
 
     // Fetch the word to be edited
     LaunchedEffect(wordId) {
         wordId?.let {
             val existingWord = wordViewModel.getWordById(it)
             existingWord?.let { fetchedWord ->
-                // Update the state variables
+                originalWord = fetchedWord
                 word = fetchedWord.word
                 meaning = fetchedWord.meaning
                 example = fetchedWord.example
@@ -60,26 +61,21 @@ fun EditWordScreen(
     }
 
     fun updateWord() {
-        if (word.isNotBlank() && meaning.isNotBlank()) {
-            val currentTime = System.currentTimeMillis()
-
-            val updatedWord = Word(
-                id = wordId ?: 0,
+        if (word.isNotBlank() && meaning.isNotBlank() && originalWord != null) {
+            val updatedWord = originalWord!!.copy(
                 word = word,
                 meaning = meaning,
-                example = example,
-                lastReviewed = currentTime,
-                reviewCount = 0,
-                nextReviewTime = SpacedRepetitionHelper.getNextReviewTime(currentTime, 0) // First review interval (1 day)
+                example = example
+                // Keep original lastReviewed, reviewCount, and nextReviewTime
             )
 
             coroutineScope.launch {
                 wordViewModel.updateWord(updatedWord)
-                Toast.makeText(context, "Word updated!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Word updated successfully!", Toast.LENGTH_SHORT).show()
                 onNavigateBack()
             }
         } else {
-            Toast.makeText(context, "Please fill out all fields", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Please fill out Word and Meaning fields", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -100,6 +96,7 @@ fun EditWordScreen(
                     label = { Text("Word") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextField(
@@ -108,17 +105,22 @@ fun EditWordScreen(
                     label = { Text("Meaning") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextField(
                     value = example,
                     onValueChange = { example = it },
-                    label = { Text("Example") },
+                    label = { Text("Example (Optional)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(onClick = { updateWord() }, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = { updateWord() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Update Word")
                 }
             }

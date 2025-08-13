@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import com.example.hulaba3.data.database.Word
 import com.example.hulaba3.utils.SpacedRepetitionHelper
 import com.example.hulaba3.viewmodel.WordViewModel
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,34 +37,30 @@ fun AddWordScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-
     var word by remember { mutableStateOf("") }
     var meaning by remember { mutableStateOf("") }
     var example by remember { mutableStateOf("") }
 
     fun saveWord() {
         if (word.isNotBlank() && meaning.isNotBlank()) {
-            val currentTime = System.currentTimeMillis()
             val reviewCount = 0
-            val nextReviewTime = SpacedRepetitionHelper.getNextReviewTime(currentTime, reviewCount)
+            val nextReviewTime = SpacedRepetitionHelper.getNextReviewTime(null, reviewCount) // Pass null for new word
 
             val newWord = Word(
                 word = word,
                 meaning = meaning,
                 example = example,
-                lastReviewed = currentTime, // Word added now
+                lastReviewed = null, // New word - not reviewed yet
                 reviewCount = reviewCount,
-                nextReviewTime = nextReviewTime // First review interval
+                nextReviewTime = nextReviewTime
             )
 
-            coroutineScope.launch {
-                wordViewModel.insertWord(newWord)
-                Toast.makeText(context, "Word saved!", Toast.LENGTH_SHORT).show()
-                onNavigateBack()
-            }
+            // FIXED: Use the method that schedules notifications
+            wordViewModel.insertWordWithNotification(context, newWord)
+            Toast.makeText(context, "Word saved and notification scheduled!", Toast.LENGTH_SHORT).show()
+            onNavigateBack()
         } else {
-            Toast.makeText(context, "Please fill out all fields", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Please fill out Word and Meaning fields", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -87,6 +81,7 @@ fun AddWordScreen(
                     label = { Text("Word") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextField(
@@ -95,17 +90,22 @@ fun AddWordScreen(
                     label = { Text("Meaning") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextField(
                     value = example,
                     onValueChange = { example = it },
-                    label = { Text("Example") },
+                    label = { Text("Example (Optional)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(onClick = { saveWord() }, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = { saveWord() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Save Word")
                 }
             }

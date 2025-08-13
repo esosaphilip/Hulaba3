@@ -34,7 +34,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "hulaba3_database"
                 )
-                    .addMigrations(MIGRATION_2_3) // Apply the migration safely
+                    .addMigrations(MIGRATION_2_3)
+                    .fallbackToDestructiveMigration() // For development - remove in production
                     .build()
                 INSTANCE = instance
                 instance

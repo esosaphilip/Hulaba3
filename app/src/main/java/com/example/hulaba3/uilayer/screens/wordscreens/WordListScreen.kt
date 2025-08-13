@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,6 +65,7 @@ fun WordListScreen(
     navController: NavController
 ) {
     val words by wordViewModel.allWords.collectAsState()
+    val context = LocalContext.current // Get context here
 
     Scaffold(
         topBar = {
@@ -101,7 +103,7 @@ fun WordListScreen(
                     WordItem(
                         word = word,
                         onDelete = { wordViewModel.deleteWord(it) },
-                        onReviewed = { wordViewModel.updateLastReviewed(it) }, // <--- fixed name
+                        onReviewed = { wordViewModel.updateLastReviewed(context, it) }, // FIXED: Pass context
                         navController = navController
                     )
                 }
@@ -111,7 +113,12 @@ fun WordListScreen(
 }
 
 @Composable
-fun WordItem(word: Word, onDelete: (Word) -> Unit, onReviewed: (Word) -> Unit, navController: NavController) {
+fun WordItem(
+    word: Word,
+    onDelete: (Word) -> Unit,
+    onReviewed: (Word) -> Unit,
+    navController: NavController
+) {
     var expanded by remember { mutableStateOf(false) }
 
     Card(
@@ -158,21 +165,26 @@ fun WordItem(word: Word, onDelete: (Word) -> Unit, onReviewed: (Word) -> Unit, n
             ) {
                 Column(modifier = Modifier.padding(top = 8.dp)) {
                     Text("Meaning: ${word.meaning}", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-                    Text("Example: ${word.example}", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+
+                    if (word.example.isNotBlank()) {
+                        Text("Example: ${word.example}", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                    }
 
                     val nextReviewDate = remember {
                         derivedStateOf {
                             val calendar = Calendar.getInstance()
                             calendar.timeInMillis = word.nextReviewTime
-                            SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(calendar.time)
+                            SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(calendar.time)
                         }
                     }.value
 
                     Text("Next Review: $nextReviewDate", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF25D366))
+                    Text("Review Count: ${word.reviewCount}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
-                        onClick = { onReviewed(word) },
+                        onClick = { onReviewed(word) }, // This now properly reschedules notifications
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
                     ) {
                         Text("Mark as Reviewed", color = Color.Black)

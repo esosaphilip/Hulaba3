@@ -39,29 +39,33 @@ fun MainScreen(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxSize(),
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
-
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // ✅ Test Notification Button
-            Button(
-                onClick = {
-                    NotificationHelper.showNotification(
-                        context = context,
-                        title = "Test Notification",
-                        message = "This is just a test!"
-                    )
-                },
+            // Test Notification Button (for debugging)
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Send Test Notification")
+                Button(
+                    onClick = {
+                        NotificationHelper.showNotification(
+                            context = context,
+                            title = "Test Notification",
+                            message = "This is a test notification to verify the system works!"
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Test Notification")
+                }
             }
 
-            // ✅ Main Navigation Area
+            // Main Navigation Area
             NavHost(
                 navController = navController,
                 startDestination = "wordList",
@@ -73,24 +77,28 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         navController = navController
                     )
                 }
+
                 composable("addWord") {
                     AddWordScreen(
                         wordViewModel = wordViewModel,
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
+
                 composable("topicList") {
                     TopicScreen(
                         topicViewModel = topicViewModel,
                         navController = navController
                     )
                 }
+
                 composable("addTopic") {
                     AddTopicScreen(
                         topicViewModel = topicViewModel,
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
+
                 composable("editWord/{wordId}") { backStackEntry ->
                     val wordId = backStackEntry.arguments?.getString("wordId")?.toLong()
                     EditWordScreen(
@@ -128,14 +136,12 @@ fun BottomNavigationBar(navController: NavController) {
                         contentDescription = item.name,
                         modifier = Modifier
                             .size(32.dp)
-                            .align(Alignment.CenterVertically)
                     )
                 },
                 label = {
                     Text(
                         item.name,
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
-                        modifier = Modifier.align(Alignment.CenterVertically)
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp)
                     )
                 },
                 alwaysShowLabel = true
@@ -144,4 +150,8 @@ fun BottomNavigationBar(navController: NavController) {
     }
 }
 
-data class BottomNavItem(val name: String, val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+data class BottomNavItem(
+    val name: String,
+    val route: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+)
