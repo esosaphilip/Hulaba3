@@ -9,10 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,26 +18,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -76,57 +55,82 @@ fun TopicScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Topics",
-                        style = MaterialTheme.typography.headlineLarge.copy(
+                        text = "Study Topics",
+                        style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.5.sp,
-                            shadow = Shadow(offset = Offset(2f, 2f), blurRadius = 5f, color = Color.Gray)
+                            shadow = Shadow(
+                                offset = Offset(1f, 1f),
+                                blurRadius = 3f,
+                                color = Color.Black.copy(alpha = 0.2f)
+                            )
                         ),
-                        color = Color.White,
-                        modifier = Modifier.padding(8.dp)
+                        color = Color.White
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF25D366) // WhatsApp Green
+                    containerColor = Color(0xFF25D366)
                 ),
                 actions = {
                     IconButton(onClick = { navController.navigate("addTopic") }) {
                         Icon(Icons.Default.Add, contentDescription = "Add Topic", tint = Color.White)
                     }
                 },
-                modifier = Modifier.shadow(8.dp, shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+                modifier = Modifier.shadow(6.dp, shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("addTopic") },
-                containerColor = Color(0xFF25D366) // WhatsApp green
+                containerColor = Color(0xFF25D366)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Topic", tint = Color.White)
             }
         },
-        containerColor = Color(0xFFF5F9FF),
-        content = { padding ->
-            LazyColumn(modifier = Modifier.padding(padding)) {
+        containerColor = Color(0xFFF5F9FF)
+    ) { padding ->
+        if (topics.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No topics yet.\nTap + to add your first one!",
+                    style = MaterialTheme.typography.bodyLarge.copy(color = Color.Gray),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 items(topics) { topic ->
-                    TopicItem(topic, onDelete = { topicViewModel.deleteTopic(it) }, onClick = { selectedTopic ->
-                        selectedTopic.pdfUri?.let { pdfUri ->
-                            coroutineScope.launch {
-                                openPdfViewer(context = context, pdfUri = pdfUri.toUri())
+                    TopicItem(
+                        topic,
+                        onDelete = { topicViewModel.deleteTopic(it) },
+                        onClick = { selectedTopic ->
+                            selectedTopic.pdfUri?.let { pdfUri ->
+                                coroutineScope.launch {
+                                    openPdfViewer(context = context, pdfUri = pdfUri.toUri())
+                                }
                             }
                         }
-                    })
+                    )
                 }
             }
         }
-    )
+    }
 }
 
 @Composable
 fun TopicItem(topic: Topic, onClick: (Topic) -> Unit, onDelete: (Topic) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-
-    val topicViewModel: TopicViewModel = koinViewModel() // Retrieve the ViewModel here
+    val topicViewModel: TopicViewModel = koinViewModel()
 
     val nextReviewDate = remember {
         val calendar = Calendar.getInstance()
@@ -137,31 +141,25 @@ fun TopicItem(topic: Topic, onClick: (Topic) -> Unit, onDelete: (Topic) -> Unit)
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
             .clickable { expanded = !expanded }
-            .shadow(8.dp, shape = RoundedCornerShape(16.dp)),
+            .shadow(4.dp, shape = RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = topic.title,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = Color.Black, // Topic title is black
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.Black,
                     modifier = Modifier.weight(1f)
                 )
-
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (expanded) "Collapse" else "Expand",
-                        tint = Color(0xFF25D366) // WhatsApp green for icons
+                        contentDescription = null,
+                        tint = Color(0xFF25D366)
                     )
                 }
-
                 IconButton(onClick = { onDelete(topic) }) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
                 }
@@ -172,33 +170,35 @@ fun TopicItem(topic: Topic, onClick: (Topic) -> Unit, onDelete: (Topic) -> Unit)
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                Column(modifier = Modifier.padding(top = 8.dp)) {
-                    Text("Next Review: $nextReviewDate", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF25D366)) // WhatsApp green
-
+                Column(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Next Review: $nextReviewDate", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF25D366))
                     topic.pdfUri?.let {
-                        Text("PDF Path: $it", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                        Text("PDF Path: $it", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     }
-
                     Button(
                         onClick = { onClick(topic) },
-                        modifier = Modifier.padding(top = 8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)) // WhatsApp green
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
                     ) {
-                        Text("Open PDF", color = Color.Black) // Button text is black
+                        Text("Open PDF", color = Color.White)
                     }
-
                     Button(
                         onClick = {
                             val updatedTopic = topic.copy(
                                 lastReviewed = System.currentTimeMillis(),
-                                nextReviewTime = System.currentTimeMillis() + 86_400_000 // Review in 1 day
+                                nextReviewTime = System.currentTimeMillis() + 86_400_000
                             )
                             topicViewModel.updateTopic(updatedTopic)
                         },
-                        modifier = Modifier.padding(top = 8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)) // Green for the Mark as Reviewed button
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                     ) {
-                        Text("Mark as Reviewed", color = Color.Black) // Button text is black
+                        Text("Mark as Reviewed", color = Color.White)
                     }
                 }
             }

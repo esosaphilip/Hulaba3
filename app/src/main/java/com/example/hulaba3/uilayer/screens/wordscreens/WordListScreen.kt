@@ -5,15 +5,12 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -21,31 +18,13 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,6 +37,16 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+// Define colors matching Figma design
+private val GreenPrimary = Color(0xFF4CAF50)
+private val GreenSecondary = Color(0xFF66BB6A)
+private val GreenLight = Color(0xFFE8F5E8)
+private val BackgroundGray = Color(0xFFF5F5F5)
+private val CardBackground = Color.White
+private val TextPrimary = Color(0xFF212121)
+private val TextSecondary = Color(0xFF757575)
+private val RedAccent = Color(0xFFF44336)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordListScreen(
@@ -65,47 +54,100 @@ fun WordListScreen(
     navController: NavController
 ) {
     val words by wordViewModel.allWords.collectAsState()
-    val context = LocalContext.current // Get context here
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = {
-                    Text(
-                        text = "Words List",
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp,
-                            shadow = Shadow(offset = Offset(2f, 2f), blurRadius = 5f, color = Color.Gray)
-                        ),
-                        color = Color.White,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF25D366)
-                ),
-                actions = {
-                    IconButton(onClick = { navController.navigate("addWord") }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Word", tint = Color.White)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.List,
+                            contentDescription = null,
+                            tint = GreenPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Word Pool",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary
+                        )
                     }
                 },
-                modifier = Modifier.shadow(8.dp, shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+                actions = {
+                    FloatingActionButton(
+                        onClick = { navController.navigate("addWord") },
+                        modifier = Modifier.size(40.dp),
+                        containerColor = GreenPrimary,
+                        contentColor = Color.White
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Add Word",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White
+                )
             )
         },
-        containerColor = Color(0xFFF5F9FF),
+        containerColor = BackgroundGray,
         content = { padding ->
-            LazyColumn(
-                contentPadding = padding,
-                modifier = Modifier.padding(16.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
             ) {
-                items(words) { word ->
-                    WordItem(
-                        word = word,
-                        onDelete = { wordViewModel.deleteWord(it) },
-                        onReviewed = { wordViewModel.updateLastReviewed(context, it) }, // FIXED: Pass context
-                        navController = navController
-                    )
+                // Header section
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = GreenLight),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            "Newly Learned Words",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            "${words.size} words in your collection",
+                            fontSize = 14.sp,
+                            color = TextSecondary,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+
+                // Words list
+                LazyColumn(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(words) { word ->
+                        WordItem(
+                            word = word,
+                            onDelete = { wordViewModel.deleteWord(it) },
+                            onReviewed = { wordViewModel.updateLastReviewed(context, it) },
+                            navController = navController
+                        )
+                    }
+
+                    // Add bottom spacing
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
             }
         }
@@ -124,52 +166,135 @@ fun WordItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable { expanded = !expanded }
-            .shadow(8.dp, shape = RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+            .clickable { expanded = !expanded },
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Header row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = word.word,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = Color.Black,
-                    modifier = Modifier.weight(1f)
+                // Word status indicator
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(GreenPrimary)
                 )
 
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (expanded) "Collapse" else "Expand",
-                        tint = Color(0xFF25D366)
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Word text
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = word.word,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = "Review count: ${word.reviewCount}",
+                        fontSize = 12.sp,
+                        color = TextSecondary
                     )
                 }
 
-                IconButton(onClick = { onDelete(word) }) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
-                }
+                // Action buttons
+                Row {
+                    IconButton(
+                        onClick = { navController.navigate("editWord/${word.id}") },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = GreenPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
 
-                IconButton(onClick = { navController.navigate("editWord/${word.id}") }) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF25D366))
+                    IconButton(
+                        onClick = { onDelete(word) },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = RedAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { expanded = !expanded },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (expanded) "Collapse" else "Expand",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 
+            // Expanded content
             AnimatedVisibility(
                 visible = expanded,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                Column(modifier = Modifier.padding(top = 8.dp)) {
-                    Text("Meaning: ${word.meaning}", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                Column(
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    // Divider
+                    Divider(
+                        color = Color(0xFFE0E0E0),
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
 
+                    // Meaning section
+                    Text(
+                        text = "Meaning/Definitions",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextPrimary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = word.meaning,
+                        fontSize = 14.sp,
+                        color = TextSecondary,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    // Example section (if exists)
                     if (word.example.isNotBlank()) {
-                        Text("Example: ${word.example}", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                        Text(
+                            text = "Example",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextPrimary,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = word.example,
+                            fontSize = 14.sp,
+                            color = TextSecondary,
+                            lineHeight = 20.sp,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
                     }
 
+                    // Review info
                     val nextReviewDate = remember {
                         derivedStateOf {
                             val calendar = Calendar.getInstance()
@@ -178,16 +303,37 @@ fun WordItem(
                         }
                     }.value
 
-                    Text("Next Review: $nextReviewDate", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF25D366))
-                    Text("Review Count: ${word.reviewCount}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    Text(
+                        text = "Next Review",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextPrimary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = nextReviewDate,
+                        fontSize = 14.sp,
+                        color = GreenPrimary,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
+                    // Action button
                     Button(
-                        onClick = { onReviewed(word) }, // This now properly reschedules notifications
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
+                        onClick = { onReviewed(word) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GreenPrimary,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Mark as Reviewed", color = Color.Black)
+                        Text(
+                            "Mark as Reviewed",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }

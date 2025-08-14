@@ -1,29 +1,28 @@
 package com.example.hulaba3.uilayer.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.hulaba3.uilayer.screens.topicscreens.AddTopicScreen
 import com.example.hulaba3.uilayer.screens.topicscreens.TopicScreen
 import com.example.hulaba3.uilayer.screens.wordscreens.AddWordScreen
 import com.example.hulaba3.uilayer.screens.wordscreens.EditWordScreen
 import com.example.hulaba3.uilayer.screens.wordscreens.WordListScreen
-import com.example.hulaba3.utils.NotificationHelper
 import com.example.hulaba3.viewmodel.TopicViewModel
 import com.example.hulaba3.viewmodel.WordViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -37,6 +36,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = Color(0xFFF8F9FA),
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
         Column(
@@ -44,32 +44,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // Test Notification Button (for debugging)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = {
-                        NotificationHelper.showNotification(
-                            context = context,
-                            title = "Test Notification",
-                            message = "This is a test notification to verify the system works!"
-                        )
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Test Notification")
-                }
-            }
-
             // Main Navigation Area
             NavHost(
                 navController = navController,
                 startDestination = "wordList",
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
             ) {
                 composable("wordList") {
                     WordListScreen(
@@ -107,6 +88,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
+
+                composable("settings") {
+                    SettingsScreen()
+                }
             }
         }
     }
@@ -114,37 +99,62 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
+    val navBackStackEntry = navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry.value?.destination?.route
+
     NavigationBar(
         modifier = Modifier
-            .height(72.dp)
-            .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
-        containerColor = Color(0xFF25D366),
-        contentColor = Color.White
+            .height(80.dp)
+            .fillMaxWidth(),
+        containerColor = Color(0xFF10B981), // Matching Figma green color
+        contentColor = Color.White,
+        tonalElevation = 0.dp
     ) {
         val items = listOf(
             BottomNavItem("Words", "wordList", Icons.Filled.AccountBox),
-            BottomNavItem("Topics", "topicList", Icons.Filled.Info)
+            BottomNavItem("Topics", "topicList", Icons.Filled.Info),
+            BottomNavItem("Settings", "settings", Icons.Filled.Settings)
         )
 
         items.forEach { item ->
+            val isSelected = currentRoute == item.route
+
             NavigationBarItem(
-                selected = false,
-                onClick = { navController.navigate(item.route) },
+                selected = isSelected,
+                onClick = {
+                    if (currentRoute != item.route) {
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    }
+                },
                 icon = {
                     Icon(
                         item.icon,
                         contentDescription = item.name,
-                        modifier = Modifier
-                            .size(32.dp)
+                        modifier = Modifier.size(28.dp),
+                        tint = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f)
                     )
                 },
                 label = {
                     Text(
                         item.name,
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp)
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        ),
+                        color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f)
                     )
                 },
-                alwaysShowLabel = true
+                alwaysShowLabel = true,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.White,
+                    selectedTextColor = Color.White,
+                    unselectedIconColor = Color.White.copy(alpha = 0.7f),
+                    unselectedTextColor = Color.White.copy(alpha = 0.7f),
+                    indicatorColor = Color.White.copy(alpha = 0.15f)
+                )
             )
         }
     }
