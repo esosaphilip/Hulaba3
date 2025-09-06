@@ -27,6 +27,7 @@ import com.example.hulaba3.viewmodel.TopicViewModel
 import com.example.hulaba3.viewmodel.WordViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
     val wordViewModel: WordViewModel = koinViewModel()
@@ -35,9 +36,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars), // Add this line to handle system bars
         containerColor = Color(0xFFF8F9FA),
-        bottomBar = { BottomNavigationBar(navController) }
+        bottomBar = {
+            BottomNavigationBar(navController)
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -108,7 +113,8 @@ fun BottomNavigationBar(navController: NavController) {
             .fillMaxWidth(),
         containerColor = Color(0xFF10B981), // Matching Figma green color
         contentColor = Color.White,
-        tonalElevation = 0.dp
+        tonalElevation = 0.dp,
+        windowInsets = WindowInsets(0) // This prevents double padding from system insets
     ) {
         val items = listOf(
             BottomNavItem("Words", "wordList", Icons.Filled.AccountBox),

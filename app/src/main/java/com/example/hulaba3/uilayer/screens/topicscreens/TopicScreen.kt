@@ -87,7 +87,7 @@ fun TopicScreen(
                 Icon(Icons.Default.Add, contentDescription = "Add Topic", tint = Color.White)
             }
         },
-        containerColor = Color(0xFFF5F9FF)
+        containerColor = Color(0xFFF8F9FA) // Changed to match MainScreen background
     ) { padding ->
         if (topics.isEmpty()) {
             Box(
@@ -106,8 +106,10 @@ fun TopicScreen(
             LazyColumn(
                 modifier = Modifier
                     .padding(padding)
-                    .padding(horizontal = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp), // Add top padding for better spacing
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 80.dp) // Add bottom padding to avoid FAB overlap
             ) {
                 items(topics) { topic ->
                     TopicItem(
@@ -143,7 +145,8 @@ fun TopicItem(topic: Topic, onClick: (Topic) -> Unit, onDelete: (Topic) -> Unit)
             .fillMaxWidth()
             .clickable { expanded = !expanded }
             .shadow(4.dp, shape = RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // Add subtle elevation
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
