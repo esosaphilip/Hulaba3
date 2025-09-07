@@ -15,7 +15,17 @@ workmanager = "2.10.0"
 lifecycle = "2.8.7"
 ksproom = "2.1.0-1.0.29"
 kotlinx-coroutines = "1.7.3"
+# PDF Processing
+itext = "8.0.2"
+pdfbox = "3.0.1"
 
+# AI and HTTP
+okhttp = "4.12.0"
+retrofit = "2.9.0"
+gson = "2.10.1"
+generative-ai = "0.2.2"
+
+docfile = "1.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,7 +55,39 @@ workmanager = { module = "androidx.work:work-runtime-ktx", version.ref = "workma
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 
+# PDF Processing (choose one - iText is more feature-rich, PDFBox is lighter)
+itext-core = { group = "com.itextpdf", name = "itext-core", version.ref = "itext" }
+itext-layout = { group = "com.itextpdf", name = "layout", version.ref = "itext" }
+# Alternative: PDFBox (uncomment if you prefer this)
+# pdfbox-android = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfbox" }
 
+# HTTP and API calls
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+# Google Generative AI (Gemini)
+generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generative-ai" }
+
+
+documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "docfile" }
+
+
+[bundles]
+# AI Quiz features bundle
+ai-quiz = [
+    "itext-core",
+    "itext-layout",
+    "okhttp",
+    "okhttp-logging",
+    "retrofit",
+    "retrofit-gson",
+    "gson",
+    "generativeai",
+    "documentfile"
+]
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

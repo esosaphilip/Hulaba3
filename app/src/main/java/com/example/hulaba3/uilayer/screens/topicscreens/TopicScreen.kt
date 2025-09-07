@@ -18,6 +18,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +37,7 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.example.hulaba3.data.database.Topic
 import com.example.hulaba3.viewmodel.TopicViewModel
+import com.example.hulaba3.viewmodel.QuizViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
@@ -44,11 +48,28 @@ import java.util.Locale
 @Composable
 fun TopicScreen(
     topicViewModel: TopicViewModel = koinViewModel(),
+    quizViewModel: QuizViewModel = koinViewModel(),
     navController: NavController
 ) {
     val topics by topicViewModel.allTopics.collectAsState()
+    val quizUiState by quizViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    // Handle quiz generation completion
+    LaunchedEffect(quizUiState.isGenerationComplete) {
+        if (quizUiState.isGenerationComplete) {
+            // Show success message or navigate to quiz
+        }
+    }
+
+    // Show error snackbar if quiz generation fails
+    quizUiState.error?.let { error ->
+        LaunchedEffect(error) {
+            // Show error toast or snackbar
+            quizViewModel.clearError()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -87,7 +108,7 @@ fun TopicScreen(
                 Icon(Icons.Default.Add, contentDescription = "Add Topic", tint = Color.White)
             }
         },
-        containerColor = Color(0xFFF8F9FA) // Changed to match MainScreen background
+        containerColor = Color(0xFFF8F9FA)
     ) { padding ->
         if (topics.isEmpty()) {
             Box(
@@ -107,21 +128,32 @@ fun TopicScreen(
                 modifier = Modifier
                     .padding(padding)
                     .padding(horizontal = 12.dp)
-                    .padding(top = 12.dp), // Add top padding for better spacing
+                    .padding(top = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 80.dp) // Add bottom padding to avoid FAB overlap
+                contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(topics) { topic ->
-                    TopicItem(
-                        topic,
+                    EnhancedTopicItem(
+                        topic = topic,
                         onDelete = { topicViewModel.deleteTopic(it) },
-                        onClick = { selectedTopic ->
+                        onOpenPdf = { selectedTopic ->
                             selectedTopic.pdfUri?.let { pdfUri ->
                                 coroutineScope.launch {
                                     openPdfViewer(context = context, pdfUri = pdfUri.toUri())
                                 }
                             }
-                        }
+                        },
+                        onGenerateQuestions = { selectedTopic ->
+                            quizViewModel.generateQuestionsForTopic(selectedTopic, questionCount = 5)
+                        },
+                        onStartQuiz = { selectedTopic ->
+                            navController.navigate("quiz/${selectedTopic.id}")
+                        },
+                        onStartReview = { selectedTopic ->
+                            navController.navigate("quiz/${selectedTopic.id}/review")
+                        },
+                        isGeneratingQuestions = quizUiState.isLoading,
+                        quizViewModel = quizViewModel
                     )
                 }
             }
@@ -130,9 +162,25 @@ fun TopicScreen(
 }
 
 @Composable
-fun TopicItem(topic: Topic, onClick: (Topic) -> Unit, onDelete: (Topic) -> Unit) {
+fun EnhancedTopicItem(
+    topic: Topic,
+    onDelete: (Topic) -> Unit,
+    onOpenPdf: (Topic) -> Unit,
+    onGenerateQuestions: (Topic) -> Unit,
+    onStartQuiz: (Topic) -> Unit,
+    onStartReview: (Topic) -> Unit,
+    isGeneratingQuestions: Boolean,
+    quizViewModel: QuizViewModel
+) {
     var expanded by remember { mutableStateOf(false) }
+    var questionCount by remember { mutableStateOf(0) }
     val topicViewModel: TopicViewModel = koinViewModel()
+
+    // Load question count for this topic
+    LaunchedEffect(topic.id) {
+        // You'll need to add this method to QuizViewModel
+        // questionCount = quizViewModel.getQuestionCountForTopic(topic.id)
+    }
 
     val nextReviewDate = remember {
         val calendar = Calendar.getInstance()
@@ -146,9 +194,10 @@ fun TopicItem(topic: Topic, onClick: (Topic) -> Unit, onDelete: (Topic) -> Unit)
             .clickable { expanded = !expanded }
             .shadow(4.dp, shape = RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // Add subtle elevation
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Header Row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = topic.title,
@@ -156,6 +205,22 @@ fun TopicItem(topic: Topic, onClick: (Topic) -> Unit, onDelete: (Topic) -> Unit)
                     color = Color.Black,
                     modifier = Modifier.weight(1f)
                 )
+
+                // Question count badge
+                if (questionCount > 0) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF25D366)),
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text(
+                            text = "$questionCount Q",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -179,29 +244,154 @@ fun TopicItem(topic: Topic, onClick: (Topic) -> Unit, onDelete: (Topic) -> Unit)
                         .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Next Review: $nextReviewDate", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF25D366))
+                    Text(
+                        "Next Review: $nextReviewDate",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF25D366)
+                    )
+
                     topic.pdfUri?.let {
-                        Text("PDF Path: $it", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        Text(
+                            "PDF: ${it.substringAfterLast("/")}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
                     }
-                    Button(
-                        onClick = { onClick(topic) },
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // PDF Actions Row
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Open PDF", color = Color.White)
+                        Button(
+                            onClick = { onOpenPdf(topic) },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
+                        ) {
+                            Text("Open PDF", color = Color.White, fontSize = 12.sp)
+                        }
+
+                        Button(
+                            onClick = {
+                                val updatedTopic = topic.copy(
+                                    lastReviewed = System.currentTimeMillis(),
+                                    nextReviewTime = System.currentTimeMillis() + 86_400_000
+                                )
+                                topicViewModel.updateTopic(updatedTopic)
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                        ) {
+                            Text("Mark Reviewed", color = Color.White, fontSize = 12.sp)
+                        }
                     }
-                    Button(
-                        onClick = {
-                            val updatedTopic = topic.copy(
-                                lastReviewed = System.currentTimeMillis(),
-                                nextReviewTime = System.currentTimeMillis() + 86_400_000
-                            )
-                            topicViewModel.updateTopic(updatedTopic)
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                    ) {
-                        Text("Mark as Reviewed", color = Color.White)
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // AI Quiz Actions
+                    if (questionCount == 0) {
+                        // Generate Questions Button
+                        Button(
+                            onClick = { onGenerateQuestions(topic) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isGeneratingQuestions,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
+                        ) {
+                            if (isGeneratingQuestions) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
+                                    Text("Generating Questions...", color = Color.White)
+                                }
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Place,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text("Generate AI Questions", color = Color.White)
+                                }
+                            }
+                        }
+                    } else {
+                        // Quiz Action Buttons Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = { onStartQuiz(topic) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.PlayArrow,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text("Start Quiz", color = Color.White, fontSize = 12.sp)
+                                }
+                            }
+
+                            Button(
+                                onClick = { onStartReview(topic) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B5CF6))
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Refresh,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text("Review", color = Color.White, fontSize = 12.sp)
+                                }
+                            }
+                        }
+
+                        // Regenerate Questions Button
+                        OutlinedButton(
+                            onClick = { onGenerateQuestions(topic) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isGeneratingQuestions
+                        ) {
+                            if (isGeneratingQuestions) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Text("Regenerating...")
+                                }
+                            } else {
+                                Text("Regenerate Questions ($questionCount)")
+                            }
+                        }
                     }
                 }
             }

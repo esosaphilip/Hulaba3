@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.hulaba3.data.database.AppDatabase
 import com.example.hulaba3.utils.NotificationHelper
 import com.example.hulaba3.utils.NotificationScheduler
 import com.example.hulaba3.utils.SpacedRepetitionHelper

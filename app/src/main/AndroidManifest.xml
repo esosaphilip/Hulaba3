@@ -7,6 +7,13 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- For Android 13+ (API 33+) - correct modern permissions -->
+    <uses-permission android:name="READ_MEDIA_DOCUMENTS" />
+
+    <!-- Fallback for older Android versions (below API 33) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
         android:name=".MyApplication"
         android:allowBackup="true"

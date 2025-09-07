@@ -23,8 +23,11 @@ import com.example.hulaba3.uilayer.screens.topicscreens.TopicScreen
 import com.example.hulaba3.uilayer.screens.wordscreens.AddWordScreen
 import com.example.hulaba3.uilayer.screens.wordscreens.EditWordScreen
 import com.example.hulaba3.uilayer.screens.wordscreens.WordListScreen
+import com.example.hulaba3.uilayer.screens.quiz.QuizScreen
+import com.example.hulaba3.uilayer.screens.quiz.QuizResultScreen
 import com.example.hulaba3.viewmodel.TopicViewModel
 import com.example.hulaba3.viewmodel.WordViewModel
+import com.example.hulaba3.viewmodel.QuizViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,13 +35,14 @@ import org.koin.androidx.compose.koinViewModel
 fun MainScreen(modifier: Modifier = Modifier) {
     val wordViewModel: WordViewModel = koinViewModel()
     val topicViewModel: TopicViewModel = koinViewModel()
+    val quizViewModel: QuizViewModel = koinViewModel()
     val navController = rememberNavController()
     val context = LocalContext.current
 
     Scaffold(
         modifier = modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars), // Add this line to handle system bars
+            .windowInsetsPadding(WindowInsets.systemBars),
         containerColor = Color(0xFFF8F9FA),
         bottomBar = {
             BottomNavigationBar(navController)
@@ -74,6 +78,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 composable("topicList") {
                     TopicScreen(
                         topicViewModel = topicViewModel,
+                        quizViewModel = quizViewModel,
                         navController = navController
                     )
                 }
@@ -92,6 +97,56 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         wordId = wordId,
                         onNavigateBack = { navController.popBackStack() }
                     )
+                }
+
+                // NEW: Quiz routes
+                composable("quiz/{topicId}") { backStackEntry ->
+                    val topicId = backStackEntry.arguments?.getString("topicId") ?: return@composable
+                    QuizScreen(
+                        topicId = topicId,
+                        isReviewMode = false,
+                        quizViewModel = quizViewModel,
+                        onNavigateBack = { navController.popBackStack() },
+                        onQuizComplete = { sessionId ->
+                            navController.navigate("quizResult/$sessionId") {
+                                popUpTo("topicList") { inclusive = false }
+                            }
+                        }
+                    )
+                }
+
+                composable("quiz/{topicId}/review") { backStackEntry ->
+                    val topicId = backStackEntry.arguments?.getString("topicId") ?: return@composable
+                    QuizScreen(
+                        topicId = topicId,
+                        isReviewMode = true,
+                        quizViewModel = quizViewModel,
+                        onNavigateBack = { navController.popBackStack() },
+                        onQuizComplete = { sessionId ->
+                            navController.navigate("quizResult/$sessionId") {
+                                popUpTo("topicList") { inclusive = false }
+                            }
+                        }
+                    )
+                }
+
+                composable("quizResult/{sessionId}") { backStackEntry ->
+                    val sessionId = backStackEntry.arguments?.getString("sessionId")?.toLongOrNull()
+                    if (sessionId != null) {
+                        QuizResultScreen(
+                            sessionId = sessionId,
+                            onNavigateBack = {
+                                navController.navigate("topicList") {
+                                    popUpTo("topicList") { inclusive = true }
+                                }
+                            },
+                            onRetakeQuiz = { topicId ->
+                                navController.navigate("quiz/$topicId") {
+                                    popUpTo("topicList") { inclusive = false }
+                                }
+                            }
+                        )
+                    }
                 }
 
                 composable("settings") {
