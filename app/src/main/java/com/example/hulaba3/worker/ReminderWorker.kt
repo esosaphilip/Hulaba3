@@ -47,11 +47,11 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) :
                 return Result.success()
             }
 
-            // Show notification
-            NotificationHelper.showNotification(
+            // Show redesigned smart notification with actions
+            NotificationHelper.showSmartWordNotification(
                 applicationContext,
-                "Review Word: ${word.word}",
-                "Meaning: ${word.meaning}"
+                wordId = word.id,
+                wordText = word.word
             )
 
             Log.d("ReminderWorker", "Notification sent for word: ${word.word}")
@@ -72,11 +72,11 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) :
                 return Result.success()
             }
 
-            // Show notification
+            // Keep topic notification simple for now
             NotificationHelper.showNotification(
                 applicationContext,
-                "Review Topic: ${topic.title}",
-                "Tap to open your PDF and review this topic."
+                title = "Review Topic: ${topic.title}",
+                message = "Tap to open your PDF and review this topic."
             )
 
             Log.d("ReminderWorker", "Notification sent for topic: ${topic.title}")

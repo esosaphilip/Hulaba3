@@ -69,4 +69,32 @@ class WordViewModel(private val repo: WordRepository) : ViewModel() {
             }
         }
     }
+
+    /**
+     * Update a word's schedule based on a rating from the Smart Word Card.
+     * EASY, GOOD, HARD map to different reviewCount progress using a Leitner-like strategy.
+     */
+    fun rateWord(context: Context, word: Word, quality: SpacedRepetitionHelper.ReviewQuality) {
+        viewModelScope.launch {
+            try {
+                val (newCount, nextTime) = SpacedRepetitionHelper.computeNextWithQuality(
+                    lastReviewDate = System.currentTimeMillis(),
+                    reviewCount = word.reviewCount,
+                    quality = quality
+                )
+
+                val updated = word.copy(
+                    lastReviewed = System.currentTimeMillis(),
+                    reviewCount = newCount,
+                    nextReviewTime = nextTime
+                )
+
+                repo.updateWord(updated)
+                NotificationScheduler.scheduleWordReminder(context, updated)
+                Log.d("WordViewModel", "Word '${word.word}' rated ${quality} → next in ${nextTime}")
+            } catch (e: Exception) {
+                Log.e("WordViewModel", "Error rating word: ${e.localizedMessage}")
+            }
+        }
+    }
 }

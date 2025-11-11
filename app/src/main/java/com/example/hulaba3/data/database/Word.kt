@@ -12,7 +12,9 @@ data class Word(
     val example: String,
     val lastReviewed: Long? = null, // Timestamp of last review
     val reviewCount: Int, // Number of reviews done so far
-    val nextReviewTime: Long // Timestamp of the next review (used for Spaced Repetition)
+    val nextReviewTime: Long, // Timestamp of the next review (used for Spaced Repetition)
+    val savedForLater: Boolean = false,
+    val isFavorite: Boolean = false
 )
 
 

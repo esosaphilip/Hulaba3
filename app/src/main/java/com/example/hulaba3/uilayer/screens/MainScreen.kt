@@ -2,8 +2,10 @@ package com.example.hulaba3.uilayer.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import com.example.hulaba3.uilayer.screens.topicscreens.AddTopicScreen
 import com.example.hulaba3.uilayer.screens.topicscreens.TopicScreen
 import com.example.hulaba3.uilayer.screens.wordscreens.AddWordScreen
@@ -29,6 +32,10 @@ import com.example.hulaba3.viewmodel.TopicViewModel
 import com.example.hulaba3.viewmodel.WordViewModel
 import com.example.hulaba3.viewmodel.QuizViewModel
 import org.koin.androidx.compose.koinViewModel
+import com.example.hulaba3.uilayer.screens.HomeDashboard
+import com.example.hulaba3.uilayer.screens.learning.SmartWordCardScreen
+import com.example.hulaba3.uilayer.screens.learning.SpeakingPracticeScreen
+import com.example.hulaba3.uilayer.screens.learning.OnTheGoModeScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,11 +63,40 @@ fun MainScreen(modifier: Modifier = Modifier) {
             // Main Navigation Area
             NavHost(
                 navController = navController,
-                startDestination = "wordList",
+                startDestination = "home",
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
             ) {
+                composable("home") {
+                    HomeDashboard(
+                        streakDays = 12,
+                        progress = 0.8f,
+                        onStartQuickLearning = { navController.navigate("smartWord") },
+                        onOpenSpeakingPractice = { navController.navigate("speakingPractice") },
+                        onOpenInsights = { navController.navigate("settings") }
+                    )
+                }
+                composable("smartWord") {
+                    SmartWordCardScreen(navController)
+                }
+                composable(
+                    route = "smartWord/{wordId}",
+                    deepLinks = listOf(navDeepLink { uriPattern = "hulaba://smartWord/{wordId}" })
+                ) { backStackEntry ->
+                    val wordId = backStackEntry.arguments?.getString("wordId")?.toLongOrNull()
+                    SmartWordCardScreen(navController = navController, wordId = wordId)
+                }
+                composable("speakingPractice") {
+                    SpeakingPracticeScreen()
+                }
+                composable("onTheGo") {
+                    OnTheGoModeScreen(
+                        onStartLightning = { /* TODO */ },
+                        onStartAudioOnly = { /* TODO */ },
+                        onEnablePassive = { /* TODO */ }
+                    )
+                }
                 composable("wordList") {
                     WordListScreen(
                         wordViewModel = wordViewModel,
@@ -172,7 +208,9 @@ fun BottomNavigationBar(navController: NavController) {
         windowInsets = WindowInsets(0) // This prevents double padding from system insets
     ) {
         val items = listOf(
-            BottomNavItem("Words", "wordList", Icons.Filled.AccountBox),
+            BottomNavItem("Home", "home", Icons.Filled.Home),
+            BottomNavItem("Speak", "speakingPractice", Icons.Filled.PlayArrow),
+            BottomNavItem("Words", "wordList", Icons.AutoMirrored.Filled.List),
             BottomNavItem("Topics", "topicList", Icons.Filled.Info),
             BottomNavItem("Settings", "settings", Icons.Filled.Settings)
         )

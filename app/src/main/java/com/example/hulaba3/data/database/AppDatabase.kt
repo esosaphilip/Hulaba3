@@ -28,7 +28,7 @@ import com.example.hulaba3.utils.UriTypeConverter
         StudySession::class,
         QuestionAttempt::class
     ],
-    version = 4, // Increment from your current version 3
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(UriTypeConverter::class)
@@ -123,6 +123,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration from version 4 to 5 (adds savedForLater and isFavorite columns to words)
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE words ADD COLUMN savedForLater INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE words ADD COLUMN isFavorite INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -130,8 +138,9 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "hulaba3_database"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4) // Add both migrations
-                    .fallbackToDestructiveMigration() // Remove in production
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    // IMPORTANT: Keep user data by avoiding destructive migrations.
+                    // If you add new versions, ensure proper Migration objects are provided.
                     .build()
                 INSTANCE = instance
                 instance
