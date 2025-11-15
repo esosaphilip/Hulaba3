@@ -1,8 +1,29 @@
 # Hulaba Android App
 
+![Android API](https://img.shields.io/badge/Android-API%2028%2B-brightgreen?logo=android)
+![Kotlin](https://img.shields.io/badge/Kotlin-Android%20App-blue?logo=kotlin)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material3-orange)
+![Gradle](https://img.shields.io/badge/Built%20with-Gradle-02303A?logo=gradle)
+
 An Android learning app built with Kotlin, Jetpack Compose, and Room. It helps you create study topics, attach PDF materials, and auto‑generate quizzes from your PDFs using the in‑app quiz generation pipeline.
 
 This README focuses on the Android app located in the `app/` module. A separate experimental web UI (Vite/React) also exists at the repo root, but it is not required to build or run the Android application.
+
+## Table of Contents
+- Key Features
+- Tech Stack
+- Project Structure (Android)
+- Getting Started
+- How to Add a Study Topic and Attach a PDF
+- Quiz Generation Flow
+- Data Model Highlights
+- Permissions
+- Screenshots
+- Troubleshooting & ANR Diagnostics
+- Development Notes
+- Building with Gradle (CLI)
+- Contributing
+- Code of Conduct
 
 ## Key Features
 - Add and edit study topics
@@ -76,6 +97,15 @@ cd Hulaba3
 - Storage Access Framework is used for picking PDFs (OpenDocument). No broad storage permission is required.
 - If you use speaking/audio features elsewhere, RECORD_AUDIO may be requested at runtime.
 
+## Screenshots
+Below are some screens from the Android app. These assets are located at the repository root.
+
+<p>
+  <img src="Screenshot_20250309_151737.png" alt="Topics List" width="300" />
+  <img src="Screenshot_20250814_150730.png" alt="Attach PDF" width="300" />
+  <img src="Screenshot_20250814_152351.png" alt="Add Study Note" width="300" />
+</p>
+
 ## Troubleshooting & ANR Diagnostics
 If you encounter a “System UI isn’t responding” dialog on emulator:
 - Capture events around the ANR:
@@ -116,6 +146,11 @@ Screenshots are stored at the repo root (e.g., `Screenshot_20250309_151737.png`)
 - Keep imports clean (avoid duplicates and unused)
 - Prefer dependency injection via constructor wiring in `MainScreen`
 - Write small, composable UI components in `uilayer/components`
+
+See CONTRIBUTING.md for detailed guidelines.
+
+## Code of Conduct
+We follow a community Code of Conduct. Please read CODE_OF_CONDUCT.md before participating.
 
 ## License
 This project is for educational purposes. If you plan to distribute, ensure third‑party services and content are used in compliance with their licenses and terms.
