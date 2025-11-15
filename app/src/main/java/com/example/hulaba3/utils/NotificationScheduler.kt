@@ -8,6 +8,7 @@ import androidx.work.workDataOf
 import com.example.hulaba3.data.database.Topic
 import com.example.hulaba3.data.database.Word
 import com.example.hulaba3.notifications.ReminderWorker
+import com.example.hulaba3.utils.SpacedRepetitionHelper
 import java.util.concurrent.TimeUnit
 
 object NotificationScheduler {
@@ -15,10 +16,15 @@ object NotificationScheduler {
     fun scheduleWordReminder(context: Context, word: Word) {
         try {
             val currentTime = System.currentTimeMillis()
-            val initialDelay = (word.nextReviewTime - currentTime).coerceAtLeast(0)
+            // Compute a default next review time using SRS helper for new words
+            val nextReviewTime = SpacedRepetitionHelper.getNextReviewTime(
+                lastReviewDate = null,
+                reviewCount = 0
+            )
+            val initialDelay = (nextReviewTime - currentTime).coerceAtLeast(0)
 
             if (initialDelay == 0L) {
-                Log.w("NotificationScheduler", "Word '${word.word}' review time is in the past, scheduling for 1 minute from now")
+                Log.w("NotificationScheduler", "Word '${word.germanWord}' review time is in the past, scheduling for 1 minute from now")
                 val delayMinutes = 1L // Schedule for 1 minute from now for testing
 
                 val workRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
@@ -28,7 +34,7 @@ object NotificationScheduler {
                     .build()
 
                 WorkManager.getInstance(context).enqueue(workRequest)
-                Log.d("NotificationScheduler", "Word '${word.word}' scheduled in $delayMinutes minutes")
+                Log.d("NotificationScheduler", "Word '${word.germanWord}' scheduled in $delayMinutes minutes")
             } else {
                 val workRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
                     .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
@@ -37,7 +43,7 @@ object NotificationScheduler {
                     .build()
 
                 WorkManager.getInstance(context).enqueue(workRequest)
-                Log.d("NotificationScheduler", "Word '${word.word}' scheduled in ${initialDelay / 1000 / 60} minutes")
+                Log.d("NotificationScheduler", "Word '${word.germanWord}' scheduled in ${initialDelay / 1000 / 60} minutes")
             }
         } catch (e: Exception) {
             Log.e("NotificationScheduler", "Error scheduling word reminder: ${e.localizedMessage}")

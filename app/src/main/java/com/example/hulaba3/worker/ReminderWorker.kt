@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.hulaba3.data.database.AppDatabase
 import com.example.hulaba3.utils.NotificationHelper
 import com.example.hulaba3.utils.NotificationScheduler
 import com.example.hulaba3.utils.SpacedRepetitionHelper
@@ -22,11 +23,11 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) :
 
         return try {
             val wordId = inputData.getLong("wordId", -1L)
-            val topicId = inputData.getString("topicId") ?: "" // Fixed: getString instead of getLong
+            val topicId = inputData.getString("topicId")
 
             when {
                 wordId != -1L -> handleWordReminder(wordId)
-                topicId.isNotEmpty() -> handleTopicReminder(topicId)
+                topicId != null -> handleTopicReminder(topicId)
                 else -> {
                     Log.e("ReminderWorker", "No valid IDs provided")
                     Result.success()
@@ -51,10 +52,10 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) :
             NotificationHelper.showSmartWordNotification(
                 applicationContext,
                 wordId = word.id,
-                wordText = word.word
+                wordText = word.germanWord
             )
 
-            Log.d("ReminderWorker", "Notification sent for word: ${word.word}")
+            Log.d("ReminderWorker", "Notification sent for word: ${word.germanWord}")
             Result.success()
 
         } catch (e: Exception) {
@@ -63,10 +64,10 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) :
         }
     }
 
-    private suspend fun handleTopicReminder(topicId: String): Result { // Fixed: String parameter
+    private suspend fun handleTopicReminder(topicId: String): Result { // String parameter aligns with Topic.id
         return try {
             val topic = withContext(Dispatchers.IO) {
-                topicDao.getTopicById(topicId) // Now matches String type
+                topicDao.getTopicById(topicId)
             } ?: run {
                 Log.w("ReminderWorker", "Topic with ID $topicId not found")
                 return Result.success()

@@ -18,9 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hulaba3.data.database.Word
-import com.example.hulaba3.utils.SpacedRepetitionHelper
+// SpacedRepetition is handled via NotificationScheduler at ViewModel layer
 import com.example.hulaba3.viewmodel.WordViewModel
-import org.koin.androidx.compose.koinViewModel
+// Koin not used here; ViewModel is passed from caller
 
 // Define colors matching Figma design
 private val GreenPrimary = Color(0xFF4CAF50)
@@ -34,33 +34,27 @@ private val TextSecondary = Color(0xFF757575)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AddWordScreen(
-    wordViewModel: WordViewModel = koinViewModel(),
+    wordViewModel: WordViewModel,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
-    var word by remember { mutableStateOf("") }
-    var meaning by remember { mutableStateOf("") }
-    var example by remember { mutableStateOf("") }
+    var germanWord by remember { mutableStateOf("") }
+    var englishTranslation by remember { mutableStateOf("") }
+    var exampleEnglish by remember { mutableStateOf("") }
 
     fun saveWord() {
-        if (word.isNotBlank() && meaning.isNotBlank()) {
-            val reviewCount = 0
-            val nextReviewTime = SpacedRepetitionHelper.getNextReviewTime(null, reviewCount)
-
+        if (germanWord.isNotBlank() && englishTranslation.isNotBlank()) {
             val newWord = Word(
-                word = word,
-                meaning = meaning,
-                example = example,
-                lastReviewed = null,
-                reviewCount = reviewCount,
-                nextReviewTime = nextReviewTime
+                germanWord = germanWord,
+                englishTranslation = englishTranslation,
+                exampleSentenceEnglish = exampleEnglish
             )
 
             wordViewModel.insertWordWithNotification(context, newWord)
             Toast.makeText(context, "Word saved and notification scheduled!", Toast.LENGTH_SHORT).show()
             onNavigateBack()
         } else {
-            Toast.makeText(context, "Please fill out Word and Meaning fields", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Please fill out German and English fields", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -113,7 +107,7 @@ fun AddWordScreen(
                     ) {
                         // Word Input
                         Text(
-                            text = "Enter Word",
+                            text = "German Word",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary,
@@ -121,9 +115,9 @@ fun AddWordScreen(
                         )
 
                         OutlinedTextField(
-                            value = word,
-                            onValueChange = { word = it },
-                            placeholder = { Text("Enter word here", color = TextSecondary) },
+                            value = germanWord,
+                            onValueChange = { germanWord = it },
+                            placeholder = { Text("Enter German word here", color = TextSecondary) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -137,7 +131,7 @@ fun AddWordScreen(
 
                         // Meaning Input
                         Text(
-                            text = "Meaning/Definitions",
+                            text = "English Translation",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary,
@@ -145,9 +139,9 @@ fun AddWordScreen(
                         )
 
                         OutlinedTextField(
-                            value = meaning,
-                            onValueChange = { meaning = it },
-                            placeholder = { Text("Enter meaning here", color = TextSecondary) },
+                            value = englishTranslation,
+                            onValueChange = { englishTranslation = it },
+                            placeholder = { Text("Enter English translation", color = TextSecondary) },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 3,
                             maxLines = 5,
@@ -163,7 +157,7 @@ fun AddWordScreen(
 
                         // Example Input
                         Text(
-                            text = "Example",
+                            text = "Example (English)",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary,
@@ -171,8 +165,8 @@ fun AddWordScreen(
                         )
 
                         OutlinedTextField(
-                            value = example,
-                            onValueChange = { example = it },
+                            value = exampleEnglish,
+                            onValueChange = { exampleEnglish = it },
                             placeholder = { Text("Enter example sentence (optional)", color = TextSecondary) },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 2,

@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.example.hulaba3.data.database.Word
 import com.example.hulaba3.viewmodel.WordViewModel
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+// Koin not used here; ViewModel is passed from caller
 
 // Define colors matching Figma design
 private val GreenPrimary = Color(0xFF4CAF50)
@@ -56,16 +56,16 @@ private val TextSecondary = Color(0xFF757575)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun EditWordScreen(
-    wordViewModel: WordViewModel = koinViewModel(),
+    wordViewModel: WordViewModel,
     wordId: Long?,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    var word by remember { mutableStateOf("") }
-    var meaning by remember { mutableStateOf("") }
-    var example by remember { mutableStateOf("") }
+    var germanWord by remember { mutableStateOf("") }
+    var englishTranslation by remember { mutableStateOf("") }
+    var exampleEnglish by remember { mutableStateOf("") }
     var originalWord by remember { mutableStateOf<Word?>(null) }
 
     // Fetch the word to be edited
@@ -74,19 +74,19 @@ fun EditWordScreen(
             val existingWord = wordViewModel.getWordById(it)
             existingWord?.let { fetchedWord ->
                 originalWord = fetchedWord
-                word = fetchedWord.word
-                meaning = fetchedWord.meaning
-                example = fetchedWord.example
+                germanWord = fetchedWord.germanWord
+                englishTranslation = fetchedWord.englishTranslation
+                exampleEnglish = fetchedWord.exampleSentenceEnglish ?: ""
             }
         }
     }
 
     fun updateWord() {
-        if (word.isNotBlank() && meaning.isNotBlank() && originalWord != null) {
+        if (germanWord.isNotBlank() && englishTranslation.isNotBlank() && originalWord != null) {
             val updatedWord = originalWord!!.copy(
-                word = word,
-                meaning = meaning,
-                example = example
+                germanWord = germanWord,
+                englishTranslation = englishTranslation,
+                exampleSentenceEnglish = exampleEnglish
                 // Keep original lastReviewed, reviewCount, and nextReviewTime
             )
 
@@ -96,7 +96,7 @@ fun EditWordScreen(
                 onNavigateBack()
             }
         } else {
-            Toast.makeText(context, "Please fill out Word and Meaning fields", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Please fill out German and English fields", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -149,7 +149,7 @@ fun EditWordScreen(
                     ) {
                         // Word Input
                         Text(
-                            text = "Enter Word",
+                            text = "German Word",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary,
@@ -157,9 +157,9 @@ fun EditWordScreen(
                         )
 
                         OutlinedTextField(
-                            value = word,
-                            onValueChange = { word = it },
-                            placeholder = { Text("Enter word here", color = TextSecondary) },
+                            value = germanWord,
+                            onValueChange = { germanWord = it },
+                            placeholder = { Text("Enter German word here", color = TextSecondary) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -173,7 +173,7 @@ fun EditWordScreen(
 
                         // Meaning Input
                         Text(
-                            text = "Meaning/Definitions",
+                            text = "English Translation",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary,
@@ -181,9 +181,9 @@ fun EditWordScreen(
                         )
 
                         OutlinedTextField(
-                            value = meaning,
-                            onValueChange = { meaning = it },
-                            placeholder = { Text("Enter meaning here", color = TextSecondary) },
+                            value = englishTranslation,
+                            onValueChange = { englishTranslation = it },
+                            placeholder = { Text("Enter English translation", color = TextSecondary) },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 3,
                             maxLines = 5,
@@ -199,7 +199,7 @@ fun EditWordScreen(
 
                         // Example Input
                         Text(
-                            text = "Example",
+                            text = "Example (English)",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextPrimary,
@@ -207,8 +207,8 @@ fun EditWordScreen(
                         )
 
                         OutlinedTextField(
-                            value = example,
-                            onValueChange = { example = it },
+                            value = exampleEnglish,
+                            onValueChange = { exampleEnglish = it },
                             placeholder = { Text("Enter example sentence (optional)", color = TextSecondary) },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 2,

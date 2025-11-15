@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 class WordViewModel(private val repo: WordRepository) : ViewModel() {
 
     val allWords: StateFlow<List<Word>> = repo.getAllWords()
-        .map { it.sortedBy { w -> w.word } }
+        .map { it.sortedBy { w -> w.germanWord } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // FIXED: Insert word with proper notification scheduling
@@ -29,7 +29,7 @@ class WordViewModel(private val repo: WordRepository) : ViewModel() {
 
                 // Schedule the first notification
                 NotificationScheduler.scheduleWordReminder(context, insertedWord)
-                Log.d("WordViewModel", "Word '${word.word}' inserted and notification scheduled")
+                Log.d("WordViewModel", "Word '${word.germanWord}' inserted and notification scheduled")
             } catch (e: Exception) {
                 Log.e("WordViewModel", "Error inserting word: ${e.localizedMessage}")
             }
@@ -49,21 +49,14 @@ class WordViewModel(private val repo: WordRepository) : ViewModel() {
     fun updateLastReviewed(context: Context, word: Word) {
         viewModelScope.launch {
             try {
-                val currentTime = System.currentTimeMillis()
-                val newReviewCount = word.reviewCount + 1
-                val nextReviewTime = SpacedRepetitionHelper.getNextReviewTime(currentTime, newReviewCount)
-
-                val updatedWord = word.copy(
-                    lastReviewed = currentTime,
-                    reviewCount = newReviewCount,
-                    nextReviewTime = nextReviewTime
-                )
+                // Update the word's updatedAt timestamp (no SRS fields on Word entity)
+                val updatedWord = word.copy(updatedAt = System.currentTimeMillis())
 
                 repo.updateWord(updatedWord)
 
-                // CRITICAL: Schedule the next notification
+                // Schedule a reminder using default SRS for new words
                 NotificationScheduler.scheduleWordReminder(context, updatedWord)
-                Log.d("WordViewModel", "Word '${word.word}' reviewed and next notification scheduled")
+                Log.d("WordViewModel", "Word '${word.germanWord}' reviewed and next notification scheduled")
             } catch (e: Exception) {
                 Log.e("WordViewModel", "Error updating word: ${e.localizedMessage}")
             }
@@ -77,21 +70,18 @@ class WordViewModel(private val repo: WordRepository) : ViewModel() {
     fun rateWord(context: Context, word: Word, quality: SpacedRepetitionHelper.ReviewQuality) {
         viewModelScope.launch {
             try {
-                val (newCount, nextTime) = SpacedRepetitionHelper.computeNextWithQuality(
+                // Compute next using default baseline (Word entity lacks SRS fields)
+                val (_, nextTime) = SpacedRepetitionHelper.computeNextWithQuality(
                     lastReviewDate = System.currentTimeMillis(),
-                    reviewCount = word.reviewCount,
+                    reviewCount = 0,
                     quality = quality
                 )
 
-                val updated = word.copy(
-                    lastReviewed = System.currentTimeMillis(),
-                    reviewCount = newCount,
-                    nextReviewTime = nextTime
-                )
-
+                // Update timestamp only
+                val updated = word.copy(updatedAt = System.currentTimeMillis())
                 repo.updateWord(updated)
                 NotificationScheduler.scheduleWordReminder(context, updated)
-                Log.d("WordViewModel", "Word '${word.word}' rated ${quality} → next in ${nextTime}")
+                Log.d("WordViewModel", "Word '${word.germanWord}' rated ${quality} → next in ${nextTime}")
             } catch (e: Exception) {
                 Log.e("WordViewModel", "Error rating word: ${e.localizedMessage}")
             }

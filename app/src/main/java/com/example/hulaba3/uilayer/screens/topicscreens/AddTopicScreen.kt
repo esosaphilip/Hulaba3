@@ -1,9 +1,10 @@
 package com.example.hulaba3.uilayer.screens.topicscreens
 
+import android.content.Intent
+import android.database.Cursor
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,26 +46,56 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
+// PDF selection removed; Topic entity has no pdfUri
 import com.example.hulaba3.data.database.Topic
 import com.example.hulaba3.viewmodel.TopicViewModel
-import org.koin.androidx.compose.koinViewModel
+// ViewModel is passed in from MainScreen; no Koin here
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTopicScreen(
-    topicViewModel: TopicViewModel = koinViewModel(),
+    topicViewModel: TopicViewModel,
     onNavigateBack: () -> Unit,
     topicToEdit: Topic? = null
 ) {
     var title by remember { mutableStateOf(topicToEdit?.title ?: "") }
-    var pdfUri by remember { mutableStateOf<Uri?>(topicToEdit?.pdfUri?.toUri()) }
     val context = LocalContext.current
 
-    val pdfPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> uri?.let { pdfUri = it } }
+    // Selected PDF state
+    var selectedPdfUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedPdfName by remember { mutableStateOf<String?>(null) }
+
+    fun queryDisplayName(uri: Uri?): String? {
+        if (uri == null) return null
+        return try {
+            val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex >= 0 && it.moveToFirst()) it.getString(nameIndex) else null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    val pdfPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri ->
+            uri?.let {
+                // Persist read permission for future use
+                try {
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: Exception) { }
+
+                selectedPdfUri = it
+                selectedPdfName = queryDisplayName(it) ?: "Selected PDF"
+            }
+        }
+    )
 
     Scaffold(
         containerColor = Color(0xFFF8F9FA),
@@ -148,52 +181,39 @@ fun AddTopicScreen(
                 )
             )
 
-            // Upload PDF Button - matching Figma blue button style
-            Button(
-                onClick = { pdfPickerLauncher.launch("application/pdf") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF10B981),
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 2.dp,
-                    pressedElevation = 8.dp
-                )
+            // Attach PDF section
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "Upload PDF",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
-                    )
+                    text = "Attach PDF (optional)",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
-            }
 
-            // Selected PDF indicator
-            pdfUri?.let {
-                Box(
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF3F4F6))
-                        .border(
-                            1.dp,
-                            Color(0xFFE5E7EB),
-                            RoundedCornerShape(12.dp)
-                        )
-                        .padding(16.dp)
+                        .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(12.dp))
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "✓ PDF Selected: ${it.lastPathSegment ?: "Document"}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color(0xFF059669),
-                            fontWeight = FontWeight.Medium
-                        )
+                        text = selectedPdfName ?: "No file selected",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF374151)
                     )
+
+                    Button(
+                        onClick = { pdfPicker.launch(arrayOf("application/pdf")) },
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
+                    ) {
+                        Text("Choose PDF", color = Color.White)
+                    }
                 }
             }
 
@@ -202,26 +222,31 @@ fun AddTopicScreen(
             // Save Button - matching Figma blue button style
             Button(
                 onClick = {
-                    if (title.isNotEmpty() && pdfUri != null) {
+                    if (title.isNotEmpty()) {
+                        val newTopicId = topicToEdit?.id ?: UUID.randomUUID().toString()
                         if (topicToEdit != null) {
                             topicViewModel.updateTopic(
                                 topicToEdit.copy(
-                                    title = title,
-                                    pdfUri = pdfUri.toString(),
-                                    lastReviewed = System.currentTimeMillis(),
-                                    nextReviewTime = System.currentTimeMillis() + 86_400_000
+                                    title = title
                                 )
                             )
                         } else {
                             topicViewModel.insertTopic(
                                 context,
                                 Topic(
-                                    id = UUID.randomUUID().toString(),
-                                    title = title,
-                                    pdfUri = pdfUri.toString(),
-                                    lastReviewed = System.currentTimeMillis(),
-                                    nextReviewTime = System.currentTimeMillis() + 86_400_000
+                                    id = newTopicId,
+                                    title = title
                                 )
+                            )
+                        }
+
+                        // Attach selected PDF as StudyMaterial
+                        selectedPdfUri?.let { uri ->
+                            topicViewModel.attachPdfToTopic(
+                                topicId = newTopicId,
+                                pdfUri = uri,
+                                title = selectedPdfName ?: "Study PDF",
+                                makePrimary = true
                             )
                         }
                         onNavigateBack()

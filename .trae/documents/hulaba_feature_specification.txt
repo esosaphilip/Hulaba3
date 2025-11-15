@@ -1,0 +1,551 @@
+HULABA LEARNING APP - COMPREHENSIVE FEATURE SPECIFICATION
+=================================================================
+
+This document serves as the master implementation checklist for the Hulaba spaced repetition learning app.
+Reference this during development to ensure all features are implemented.
+
+CORE NAVIGATION & INFORMATION ARCHITECTURE
+==========================================
+
+Main App Structure:
+├── 🏠 Home (Unified Dashboard)
+├── 📚 Learn
+│   ├── German Words
+│   │   ├── Word Collections
+│   │   ├── By Context (Restaurant, Tech, Travel)
+│   │   └── By Difficulty (A1-C2)
+│   ├── Topics
+│   │   ├── Technology (AI, Android, Power BI)
+│   │   ├── Professional Skills
+│   │   └── Custom Topics
+│   └── Mixed Mode (Words + Topics together)
+├── 🎤 Practice
+│   ├── Speaking (German conversation)
+│   ├── Topic Discussions (Explain concepts)
+│   └── Integrated Practice (Tech talk in German)
+├── 📊 Progress
+│   ├── Overall Statistics
+│   ├── German Language Progress
+│   ├── Topic Mastery Levels
+│   └── Learning Insights
+└── ⚙️ More
+    ├── Settings
+    ├── Notification Schedule
+    ├── Import/Export
+    └── Community
+
+UNIFIED HOME DASHBOARD FEATURES
+==============================
+
+Dashboard Components:
+□ Personalized greeting ("Guten Morgen! Ready to learn?")
+□ Today's Learning Plan section with:
+  - German word count
+  - Topic concept count
+  - Speaking session indicator
+  - Progress bar with percentage
+□ Quick Actions section:
+  - Quick Review (5 min)
+  - Speaking Practice (10 min)
+□ Learning Paths display:
+  - German level progression (B2→C1)
+  - Individual topic progress
+  - Next review time indicators
+□ Streaks & Achievements section:
+  - Day streak counter
+  - Words mastered count
+  - Topics completed count
+□ Add New Learning Path button
+
+LEARN SECTION FEATURES
+====================
+
+German Words Subsystem:
+□ Word Collections by context:
+  - Restaurant/Dining
+  - Technology/Driving
+  - Travel
+  - Work/Business
+  - Health/Medical
+□ Difficulty levels (A1, A2, B1, B2, C1, C2)
+□ Word cards with:
+  - German word prominently displayed
+  - English translation
+  - Example sentence
+  - Audio pronunciation
+  - Favorite/star functionality
+
+Topics Subsystem:
+□ Technology topics (AI, Android, Power BI)
+□ Professional skills topics
+□ Custom topic creation
+□ Topic cards with:
+  - Progress indicator
+  - Concept count
+  - PDF attachment indicator
+  - Continue learning button
+□ Concept breakdown within topics
+□ PDF integration with page tracking
+□ Personal notes per concept
+□ Visual aids and diagrams
+□ Source referencing
+
+Mixed Mode (GAME CHANGER):
+□ Interleaved learning algorithm
+□ Customizable mix ratios (default: 60% words, 40% topics)
+□ Smart ordering based on retention
+□ Session configuration:
+  - Total card count
+  - Time estimation
+  - Mix percentage controls
+□ Context-aware card transitions
+
+TOPIC DETAIL VIEW FEATURES
+=========================
+
+Topic Overview:
+□ Progress percentage display
+□ Next review time indicator
+□ Mastery level assessment
+□ Study material section:
+  - PDF viewer integration
+  - Page tracking
+  - Progress marking
+□ Key concepts list with:
+  - Individual concept status
+  - Last reviewed timestamp
+  - Confidence level indicators
+  - Review scheduling
+□ Personal notes section
+□ Practice explaining feature
+□ Related learning suggestions
+
+TOPIC CONCEPT CARD FEATURES
+===========================
+
+Concept Review Interface:
+□ Card counter (e.g., "[3/12]")
+□ Concept category display
+□ Question prompt ("What are bridge tables?")
+□ Tap-to-reveal answer mechanism
+□ Comprehensive answer display:
+  - Definition
+  - Use case explanation
+  - Visual diagram
+  - Code/example
+  - German translation
+  - Source reference
+□ Understanding assessment:
+  - Again (🔴)
+  - Hard (🟡)
+  - Good (🟢)
+  - Easy (💚)
+□ Note-taking functionality
+□ Audio playback for pronunciation
+
+SPEAKING PRACTICE FEATURES
+==========================
+
+Practice Modes:
+□ German Conversation scenarios:
+  - At the Office
+  - Restaurant
+  - Tech Interview (German)
+□ Pronunciation practice with:
+  - Voice recording
+  - Real-time feedback
+  - Accuracy scoring
+  - Waveform visualization
+□ Topic explanation practice:
+  - Record yourself explaining concepts
+  - German or English options
+  - Self-review capability
+□ Advanced practice:
+  - Tech interview in German
+  - Role-play scenarios
+  - Code review in German
+  - Client meeting simulations
+□ Practice statistics:
+  - Session count
+  - Average duration
+  - Pronunciation accuracy percentage
+
+PROGRESS & ANALYTICS FEATURES
+=============================
+
+Overview Dashboard:
+□ Time period selection (Last 30 days default)
+□ Key metrics display:
+  - Study streak
+  - Total study time
+  - Items learned
+  - Retention rate
+□ German Progress section:
+  - Current CEFR level
+  - Progress to next level
+  - Vocabulary breakdown:
+    - Total words
+    - Mastered percentage
+    - Learning percentage
+    - New percentage
+  - Speaking progress
+  - Strongest categories
+  - Areas needing work
+□ Topics Progress section:
+  - Total topics count
+  - Completion percentage
+  - Progress by category
+  - Mastered topics list
+□ Learning Velocity:
+  - Items per week graph
+  - Best day/time insights
+  - Average session duration
+□ Achievements system:
+  - Badge collection
+  - Unlock criteria
+  - Progress tracking
+□ AI Insights:
+  - Personalized recommendations
+  - Learning pattern analysis
+  - Optimization suggestions
+
+SMART NOTIFICATIONS FEATURES
+=============================
+
+Context-Aware Notifications:
+□ Mixed review reminders:
+  - German words count
+  - Topic concepts count
+  - Time estimation
+  - Quick action buttons
+□ Location-based notifications:
+  - Transit mode detection
+  - Audio-only suggestions
+  - Hands-free learning prompts
+□ Time-based notifications:
+  - Morning learning time
+  - Lunch break practice
+  - Evening review
+□ Streak maintenance reminders
+□ Smart scheduling based on learning patterns
+
+TRANSIT/ON-THE-GO MODE FEATURES
+===============================
+
+Transit Interface:
+□ Time selection (5, 10, 15, 30+ minutes)
+□ Session recommendations based on time
+□ Multiple learning modes:
+  - Lightning Mixed Review
+  - Audio-Only Mode
+  - Speaking Practice
+  - Topic Deep Dive
+□ Transit-specific settings:
+  - Larger text option
+  - One-hand mode
+  - Auto-pause at destination
+  - Offline mode ready
+□ Location integration:
+  - Route detection
+  - Average travel time
+  - Customized suggestions
+
+INTEGRATED GERMAN+TECH LEARNING FEATURES
+========================================
+
+Tech German Challenges:
+□ Combined learning sessions
+□ Technical vocabulary in German
+□ Interview preparation in German
+□ Concept explanation practice
+□ German technical terms:
+  - der Lebenszyklus (lifecycle)
+  - die Aktivität (activity)
+  - wiederherstellen (to restore)
+□ German content reading:
+  - Technical articles
+  - Translation assistance
+  - Context switching
+□ Speaking challenges:
+  - Explain tech in German
+  - Interview simulation
+  - Peer review
+
+AI-POWERED FEATURES
+===================
+
+PDF Analysis System:
+□ Automatic concept extraction
+□ Key point identification
+□ Study question generation
+□ Summary creation
+□ German vocabulary detection
+□ Auto-creation of learning cards
+□ Review and editing interface
+
+Smart Scheduling:
+□ AI-optimized review intervals
+□ Personal learning pattern analysis
+□ Best time recommendations
+□ Adaptive difficulty adjustment
+□ Progress prediction
+□ Retention optimization
+
+COMMUNITY FEATURES
+==================
+
+Study Groups:
+□ German level-based groups (B2→C1)
+□ Tech learning in German groups
+□ Member count and activity indicators
+□ Discussion forums
+□ Friend connections
+
+Shared Collections:
+□ German Tech Vocabulary collections
+□ Interview prep topics
+□ Download statistics
+□ Rating system
+□ User attribution
+
+Challenges:
+□ 30-day speaking challenges
+□ Participant tracking
+□ Daily practice prompts
+□ Leaderboards
+
+Native Speaker Connections:
+□ Language exchange matching
+□ Correction system
+□ Cultural insights sharing
+□ Practice session scheduling
+
+SETTINGS & CUSTOMIZATION FEATURES
+================================
+
+Profile Management:
+□ Learning goals configuration
+□ Progress tracking
+□ Achievement display
+□ Account settings
+
+Notification Customization:
+□ Smart notification toggle
+□ Active time windows:
+  - Morning hours
+  - Lunch break
+  - Evening hours
+  - Commute auto-detection
+□ Quiet hours configuration
+□ Location-based triggers
+□ Weekend preferences
+
+Learning Preferences:
+□ Daily mix ratio adjustment
+  - German words percentage
+  - Topics percentage
+□ Session length selection:
+  - Quick (5 min)
+  - Medium (10 min)
+  - Deep (20+ min)
+□ Review algorithm choice:
+  - AI-optimized
+  - Classic spaced repetition
+  - Custom intervals
+
+Appearance Settings:
+□ Theme selection:
+  - Auto (system-based)
+  - Light
+  - Dark
+  - OLED Black
+□ Font size adjustment
+□ Animation reduction toggle
+□ High contrast mode
+□ Color blind support
+
+Speech & Audio:
+□ German voice selection
+□ Playback speed control
+□ Auto-play pronunciation
+□ Audio feedback settings
+□ Speech recognition toggle
+□ Voice recording quality
+
+Data & Sync:
+□ Cloud backup system
+□ Offline mode configuration
+□ Storage usage display
+□ Export/import functionality
+□ Data migration tools
+
+Privacy Settings:
+□ Anonymous analytics toggle
+□ Learning data sharing options
+□ Research participation
+□ Privacy policy access
+
+INTEGRATION FEATURES
+===================
+
+External Service Connections:
+□ Google Calendar integration
+□ Notion export functionality
+□ Anki sync capability
+□ Social media sharing
+□ Backup service integration
+
+OFFLINE CAPABILITIES
+====================
+
+Offline Functionality:
+□ Content downloading
+□ Background sync
+□ Offline indicators
+□ Smart cache management
+□ Limited functionality alerts
+
+ACCESSIBILITY FEATURES
+====================
+
+Visual Accessibility:
+□ Screen reader support
+□ High contrast modes
+□ Color blind friendly design
+□ Font size scaling
+□ Reduced animation options
+
+Motor Accessibility:
+□ Large touch targets
+□ Gesture alternatives
+□ One-handed mode
+□ Voice control integration
+□ Keyboard navigation support
+
+DATA MODEL REQUIREMENTS
+=======================
+
+Core Entities:
+□ User profile and settings
+□ German vocabulary items
+□ Topic categories and concepts
+□ Learning sessions and progress
+□ Review scheduling data
+□ Achievement and streak tracking
+□ Community data (groups, collections)
+□ AI-generated content
+□ Offline sync data
+
+Relationships:
+□ User ↔ Vocabulary (many-to-many with progress)
+□ User ↔ Topics (many-to-many with progress)
+□ Topics ↔ Concepts (one-to-many)
+□ Concepts ↔ Reviews (one-to-many)
+□ User ↔ Study Groups (many-to-many)
+□ Collections ↔ Items (many-to-many)
+
+TECHNICAL ARCHITECTURE REQUIREMENTS
+==================================
+
+Frontend Requirements:
+□ Android native development (Kotlin)
+□ Jetpack Compose for UI
+□ Room database for local storage
+□ Retrofit for API communication
+□ ExoPlayer for audio playback
+□ CameraX for photo/document capture
+□ ML Kit for AI features
+□ WorkManager for background tasks
+
+Backend Requirements:
+□ User authentication and management
+□ Content delivery system
+□ AI processing pipeline
+□ Community platform
+□ Notification service
+□ Analytics and tracking
+□ File storage and processing
+□ Real-time synchronization
+
+AI/ML Requirements:
+□ PDF text extraction and analysis
+□ Concept extraction algorithms
+□ Spaced repetition optimization
+□ Personalization engine
+□ Speech recognition and analysis
+□ Content recommendation system
+□ Learning pattern analysis
+
+IMPLEMENTATION PHASES
+====================
+
+Phase 1 - MVP Enhancement:
+□ Unified dashboard implementation
+□ Basic topic card system
+□ Mixed learning mode core
+□ Simple speaking practice
+□ Smart notification framework
+□ Offline mode basics
+
+Phase 2 - Power Features:
+□ AI PDF analysis system
+□ Integrated German+Tech learning
+□ Advanced analytics dashboard
+□ Community platform core
+□ Audio-only mode
+□ Advanced speaking features
+
+Phase 3 - Polish & Advanced:
+□ AI conversation partner
+□ Native speaker marketplace
+□ Advanced gamification
+□ Calendar integrations
+□ Export/import enhancements
+□ Performance optimization
+
+TESTING REQUIREMENTS
+====================
+
+Functional Testing:
+□ All card interactions
+□ Progress tracking accuracy
+□ Notification delivery
+□ Offline/online transitions
+□ Audio playback quality
+□ Speech recognition accuracy
+
+Performance Testing:
+□ App startup time
+□ Card loading speed
+□ Database query optimization
+□ Memory usage optimization
+□ Battery usage monitoring
+□ Network efficiency
+
+User Acceptance Testing:
+□ Learning effectiveness
+□ UI/UX satisfaction
+□ Accessibility compliance
+□ Cross-device synchronization
+□ Community feature usability
+
+DEPLOYMENT REQUIREMENTS
+=======================
+
+App Store Requirements:
+□ Play Store listing preparation
+□ Screenshot generation
+□ Feature description writing
+□ Privacy policy compliance
+□ Age rating determination
+□ Beta testing distribution
+
+Post-Launch Monitoring:
+□ Crash reporting
+□ Performance analytics
+□ User feedback collection
+□ Feature usage tracking
+□ A/B testing framework
+□ Update deployment system
+
+This specification serves as the definitive checklist for implementing the complete Hulaba learning ecosystem. Each feature should be implemented and tested according to the phases

@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.hulaba3.data.database.Word
 import com.example.hulaba3.viewmodel.WordViewModel
-import org.koin.androidx.compose.koinViewModel
+// Koin not used here; ViewModel is passed from caller
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -50,7 +50,7 @@ private val RedAccent = Color(0xFFF44336)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordListScreen(
-    wordViewModel: WordViewModel = koinViewModel(),
+    wordViewModel: WordViewModel,
     navController: NavController
 ) {
     val words by wordViewModel.allWords.collectAsState()
@@ -192,13 +192,13 @@ fun WordItem(
                 // Word text
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = word.word,
+                        text = word.germanWord,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary
                     )
                     Text(
-                        text = "Review count: ${word.reviewCount}",
+                        text = word.englishTranslation,
                         fontSize = 12.sp,
                         color = TextSecondary
                     )
@@ -269,7 +269,7 @@ fun WordItem(
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
-                        text = word.meaning,
+                        text = word.englishTranslation,
                         fontSize = 14.sp,
                         color = TextSecondary,
                         lineHeight = 20.sp,
@@ -277,7 +277,8 @@ fun WordItem(
                     )
 
                     // Example section (if exists)
-                    if (word.example.isNotBlank()) {
+                    val exampleText = word.exampleSentenceEnglish ?: word.exampleSentenceGerman
+                    if (!exampleText.isNullOrBlank()) {
                         Text(
                             text = "Example",
                             fontSize = 14.sp,
@@ -286,7 +287,7 @@ fun WordItem(
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
                         Text(
-                            text = word.example,
+                            text = exampleText,
                             fontSize = 14.sp,
                             color = TextSecondary,
                             lineHeight = 20.sp,
@@ -294,28 +295,8 @@ fun WordItem(
                         )
                     }
 
-                    // Review info
-                    val nextReviewDate = remember {
-                        derivedStateOf {
-                            val calendar = Calendar.getInstance()
-                            calendar.timeInMillis = word.nextReviewTime
-                            SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(calendar.time)
-                        }
-                    }.value
-
-                    Text(
-                        text = "Next Review",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextPrimary,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    Text(
-                        text = nextReviewDate,
-                        fontSize = 14.sp,
-                        color = GreenPrimary,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
+                    // Review info (not available directly on Word; requires progress entity)
+                    // For now, omit next review display to prevent schema mismatch.
 
                     // Action button
                     Button(

@@ -21,3 +21,5 @@ val RichCharcoal = Color(0xFF2D3748)
 // Additional neutrals for gradients/elevation
 val MistBlue = Color(0xFFEFF3F8)
 val LightShadow = Color(0x14000000) // low-opacity black for soft shadows
+val OceanTeal = DeepOceanBlue
+val CoralPink = VibrantCoral

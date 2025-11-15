@@ -5,13 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import com.example.hulaba3.data.database.Word
-import com.example.hulaba3.utils.NotificationScheduler
-import AppDatabase
 import com.example.hulaba3.MainActivity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class SmartNotificationReceiver : BroadcastReceiver() {
     companion object {
@@ -39,26 +33,15 @@ class SmartNotificationReceiver : BroadcastReceiver() {
                 context.startActivity(launchIntent)
             }
             ACTION_SAVE_LATER -> {
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        val db = AppDatabase.getDatabase(context)
-                        val wordDao = db.wordDao()
-                        val existing = wordDao.getWordById(wordId)
-                        if (existing != null) {
-                            val updated: Word = existing.copy(
-                                savedForLater = true,
-                                nextReviewTime = System.currentTimeMillis() + 45L * 60L * 1000L
-                            )
-                            wordDao.updateWord(updated)
-                            NotificationScheduler.scheduleWordReminder(context, updated)
-                            Log.d("SmartNotificationReceiver", "Word ${existing.word} saved for later")
-                        } else {
-                            Log.w("SmartNotificationReceiver", "Word not found: $wordId")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("SmartNotificationReceiver", "Error handling SAVE_LATER: ${e.localizedMessage}")
-                    }
+                // Delegate handling to the app UI. This keeps receivers lightweight and avoids DB access in broadcast context.
+                val launchIntent = Intent(context, MainActivity::class.java).apply {
+                    action = Intent.ACTION_VIEW
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    putExtra("navigate_to", "smart_word_save_later")
+                    putExtra("word_id", wordId)
                 }
+                context.startActivity(launchIntent)
+                Log.d("SmartNotificationReceiver", "Save later requested for wordId=$wordId")
             }
             else -> Log.w("SmartNotificationReceiver", "Unknown action: ${intent.action}")
         }

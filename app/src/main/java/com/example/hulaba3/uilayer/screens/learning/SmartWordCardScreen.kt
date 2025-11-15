@@ -28,7 +28,6 @@ import androidx.navigation.NavController
 import com.example.hulaba3.data.database.Word
 import com.example.hulaba3.utils.SpacedRepetitionHelper
 import com.example.hulaba3.viewmodel.WordViewModel
-import org.koin.androidx.compose.koinViewModel
 import com.example.hulaba3.uilayer.components.GlassCard
 import com.example.hulaba3.uilayer.components.HulabaButton
 import com.example.hulaba3.uilayer.components.RatingButton
@@ -41,7 +40,7 @@ enum class Difficulty { Easy, Good, Hard }
 fun SmartWordCardScreen(
     navController: NavController,
     wordId: Long? = null,
-    wordViewModel: WordViewModel = koinViewModel()
+    wordViewModel: WordViewModel
 ) {
     var tts: TextToSpeech? by remember { mutableStateOf(null) }
     var currentWord by remember { mutableStateOf<Word?>(null) }
@@ -84,22 +83,22 @@ fun SmartWordCardScreen(
             Spacer(Modifier.weight(1f))
             Text("🔊", modifier = Modifier.clickable {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                speak(currentWord?.word ?: "Fernlicht")
+                speak(currentWord?.germanWord ?: "Fernlicht")
             })
         }
 
         Spacer(Modifier.height(20.dp))
         Text(
-            currentWord?.word ?: "Fernlicht",
+            currentWord?.germanWord ?: "Fernlicht",
             style = MaterialTheme.typography.headlineLarge.copy(fontSize = 32.sp)
         )
         Spacer(Modifier.height(8.dp))
-        Text(currentWord?.meaning ?: "High beam / main beam", style = MaterialTheme.typography.titleMedium, color = RichCharcoal)
+        Text(currentWord?.englishTranslation ?: "High beam / main beam", style = MaterialTheme.typography.titleMedium, color = RichCharcoal)
 
         Spacer(Modifier.height(16.dp))
         Text("📝 Example:", style = MaterialTheme.typography.labelMedium)
         Text(
-            "\"Schalte das Fernlicht aus, es blendet den Gegenverkehr.\"",
+            currentWord?.exampleSentenceEnglish ?: "\"Schalte das Fernlicht aus, es blendet den Gegenverkehr.\"",
             style = MaterialTheme.typography.bodyLarge,
             color = RichCharcoal.copy(alpha = 0.8f)
         )
@@ -110,7 +109,7 @@ fun SmartWordCardScreen(
         Spacer(Modifier.height(16.dp))
         HulabaButton(text = "🎤 Practice Saying It") {
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-            speak(currentWord?.word ?: "Fernlicht")
+            speak(currentWord?.germanWord ?: "Fernlicht")
         }
 
         Spacer(Modifier.height(20.dp))
@@ -176,13 +175,8 @@ fun SmartWordCardScreen(
                                         }
                                     }
                                     dy < -threshold -> {
-                                        // Swipe up = Favorite
+                                        // Swipe up = Favorite (no-op; Word no longer has isFavorite)
                                         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        currentWord?.let {
-                                            val fav = it.copy(isFavorite = true)
-                                            wordViewModel.updateWord(fav)
-                                            navController.popBackStack()
-                                        }
                                     }
                                     dy > threshold -> {
                                         // Swipe down = Skip
@@ -197,7 +191,7 @@ fun SmartWordCardScreen(
                         detectTapGestures(
                             onDoubleTap = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                speak(currentWord?.word ?: "Fernlicht")
+                                speak(currentWord?.germanWord ?: "Fernlicht")
                             },
                             onLongPress = {
                                 val id = currentWord?.id

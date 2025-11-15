@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -31,7 +32,14 @@ import com.example.hulaba3.uilayer.screens.quiz.QuizResultScreen
 import com.example.hulaba3.viewmodel.TopicViewModel
 import com.example.hulaba3.viewmodel.WordViewModel
 import com.example.hulaba3.viewmodel.QuizViewModel
-import org.koin.androidx.compose.koinViewModel
+// Removed Koin dependency; instantiate ViewModels manually using Room repositories
+import com.example.hulaba3.data.database.AppDatabase
+import com.example.hulaba3.data.repository.WordRepository
+import com.example.hulaba3.data.repository.TopicRepository
+import com.example.hulaba3.data.repository.QuestionRepository
+import com.example.hulaba3.data.repository.StudySessionRepository
+import com.example.hulaba3.utils.PdfTextExtractor
+import com.example.hulaba3.utils.GeminiApiService
 import com.example.hulaba3.uilayer.screens.HomeDashboard
 import com.example.hulaba3.uilayer.screens.learning.SmartWordCardScreen
 import com.example.hulaba3.uilayer.screens.learning.SpeakingPracticeScreen
@@ -40,11 +48,28 @@ import com.example.hulaba3.uilayer.screens.learning.OnTheGoModeScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
-    val wordViewModel: WordViewModel = koinViewModel()
-    val topicViewModel: TopicViewModel = koinViewModel()
-    val quizViewModel: QuizViewModel = koinViewModel()
-    val navController = rememberNavController()
     val context = LocalContext.current
+    val db = remember(context) { AppDatabase.getDatabase(context) }
+    val wordViewModel: WordViewModel = remember { WordViewModel(WordRepository(db.wordDao())) }
+    val topicViewModel: TopicViewModel = remember {
+        TopicViewModel(
+            TopicRepository(db.topicDao()),
+            com.example.hulaba3.data.repository.StudyMaterialRepository(db.studyMaterialDao())
+        )
+    }
+    val questionRepository = remember { QuestionRepository(db.questionDao(), db.answerDao()) }
+    val studySessionRepository = remember { StudySessionRepository(db.studySessionDao(), db.questionAttemptDao()) }
+    val quizGenerationService = remember {
+        com.example.hulaba3.utils.QuizGenerationService(
+            context,
+            PdfTextExtractor(context),
+            GeminiApiService(),
+            questionRepository,
+            com.example.hulaba3.data.repository.StudyMaterialRepository(db.studyMaterialDao())
+        )
+    }
+    val quizViewModel: QuizViewModel = remember { QuizViewModel(questionRepository, studySessionRepository, quizGenerationService) }
+    val navController = rememberNavController()
 
     Scaffold(
         modifier = modifier
@@ -78,14 +103,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     )
                 }
                 composable("smartWord") {
-                    SmartWordCardScreen(navController)
+                    SmartWordCardScreen(navController = navController, wordViewModel = wordViewModel)
                 }
                 composable(
                     route = "smartWord/{wordId}",
                     deepLinks = listOf(navDeepLink { uriPattern = "hulaba://smartWord/{wordId}" })
                 ) { backStackEntry ->
                     val wordId = backStackEntry.arguments?.getString("wordId")?.toLongOrNull()
-                    SmartWordCardScreen(navController = navController, wordId = wordId)
+                    SmartWordCardScreen(navController = navController, wordId = wordId, wordViewModel = wordViewModel)
                 }
                 composable("speakingPractice") {
                     SpeakingPracticeScreen()

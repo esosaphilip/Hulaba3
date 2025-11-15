@@ -39,7 +39,7 @@ import com.example.hulaba3.data.database.Topic
 import com.example.hulaba3.viewmodel.TopicViewModel
 import com.example.hulaba3.viewmodel.QuizViewModel
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+// Koin injection is handled at MainScreen; view models are passed as parameters
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -47,8 +47,8 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopicScreen(
-    topicViewModel: TopicViewModel = koinViewModel(),
-    quizViewModel: QuizViewModel = koinViewModel(),
+    topicViewModel: TopicViewModel,
+    quizViewModel: QuizViewModel,
     navController: NavController
 ) {
     val topics by topicViewModel.allTopics.collectAsState()
@@ -136,13 +136,7 @@ fun TopicScreen(
                     EnhancedTopicItem(
                         topic = topic,
                         onDelete = { topicViewModel.deleteTopic(it) },
-                        onOpenPdf = { selectedTopic ->
-                            selectedTopic.pdfUri?.let { pdfUri ->
-                                coroutineScope.launch {
-                                    openPdfViewer(context = context, pdfUri = pdfUri.toUri())
-                                }
-                            }
-                        },
+                        onOpenPdf = { /* PDF not available on Topic entity; feature removed */ },
                         onGenerateQuestions = { selectedTopic ->
                             quizViewModel.generateQuestionsForTopic(selectedTopic, questionCount = 5)
                         },
@@ -152,8 +146,7 @@ fun TopicScreen(
                         onStartReview = { selectedTopic ->
                             navController.navigate("quiz/${selectedTopic.id}/review")
                         },
-                        isGeneratingQuestions = quizUiState.isLoading,
-                        quizViewModel = quizViewModel
+                        isGeneratingQuestions = quizUiState.isLoading
                     )
                 }
             }
@@ -169,12 +162,10 @@ fun EnhancedTopicItem(
     onGenerateQuestions: (Topic) -> Unit,
     onStartQuiz: (Topic) -> Unit,
     onStartReview: (Topic) -> Unit,
-    isGeneratingQuestions: Boolean,
-    quizViewModel: QuizViewModel
+    isGeneratingQuestions: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
     var questionCount by remember { mutableStateOf(0) }
-    val topicViewModel: TopicViewModel = koinViewModel()
 
     // Load question count for this topic
     LaunchedEffect(topic.id) {
@@ -182,11 +173,7 @@ fun EnhancedTopicItem(
         // questionCount = quizViewModel.getQuestionCountForTopic(topic.id)
     }
 
-    val nextReviewDate = remember {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = topic.nextReviewTime
-        SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(calendar.time)
-    }
+    // Topic entity does not include review scheduling fields
 
     Card(
         modifier = Modifier
@@ -244,47 +231,34 @@ fun EnhancedTopicItem(
                         .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // Optional metadata
                     Text(
-                        "Next Review: $nextReviewDate",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF25D366)
+                        "Updated: " + SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(topic.updatedAt),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
                     )
-
-                    topic.pdfUri?.let {
-                        Text(
-                            "PDF: ${it.substringAfterLast("/")}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // PDF Actions Row
+                    // Topic actions
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
-                            onClick = { onOpenPdf(topic) },
+                            onClick = { onGenerateQuestions(topic) },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
                         ) {
-                            Text("Open PDF", color = Color.White, fontSize = 12.sp)
+                            Text("Generate Questions", color = Color.White, fontSize = 12.sp)
                         }
 
                         Button(
-                            onClick = {
-                                val updatedTopic = topic.copy(
-                                    lastReviewed = System.currentTimeMillis(),
-                                    nextReviewTime = System.currentTimeMillis() + 86_400_000
-                                )
-                                topicViewModel.updateTopic(updatedTopic)
-                            },
+                            onClick = { onStartQuiz(topic) },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
                         ) {
-                            Text("Mark Reviewed", color = Color.White, fontSize = 12.sp)
+                            Text("Start Quiz", color = Color.White, fontSize = 12.sp)
                         }
                     }
 

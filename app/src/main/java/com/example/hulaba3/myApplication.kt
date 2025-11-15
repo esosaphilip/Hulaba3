@@ -3,10 +3,7 @@ package com.example.hulaba3
 
 
 import android.app.Application
-import com.example.hulaba3.di.appModule
 import com.example.hulaba3.utils.NotificationHelper
-import org.koin.android.ext.koin.androidContext
-import org.koin.core.context.startKoin
 
 class MyApplication : Application() {
     override fun onCreate() {
@@ -14,9 +11,11 @@ class MyApplication : Application() {
 
         NotificationHelper.createNotificationChannel(this)
 
-        startKoin {
-            androidContext(this@MyApplication)
-            modules(appModule)
-        }
+        // Koin initialization removed temporarily due to missing dependency.
+        // If you intend to use Koin, add the koin-android dependency and restore:
+        // startKoin {
+        //     androidContext(this@MyApplication)
+        //     modules(appModule)
+        // }
     }
 }

@@ -6,6 +6,7 @@ import android.net.Uri
 import android.util.Log
 import com.example.hulaba3.data.database.*
 import com.example.hulaba3.data.repository.QuestionRepository
+import com.example.hulaba3.data.repository.StudyMaterialRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -13,7 +14,8 @@ class QuizGenerationService(
     private val context: Context,
     private val pdfExtractor: PdfTextExtractor,
     private val geminiService: GeminiApiService,
-    private val questionRepository: QuestionRepository
+    private val questionRepository: QuestionRepository,
+    private val studyMaterialRepository: StudyMaterialRepository
 ) {
 
     suspend fun generateQuestionsFromPdf(
@@ -24,10 +26,15 @@ class QuizGenerationService(
         try {
             Log.d("QuizGeneration", "Starting question generation for topic: ${topic.title}")
 
-            // Step 1: Extract text from PDF
-            val pdfUri = Uri.parse(topic.pdfUri ?: return@withContext Result.failure(
-                Exception("No PDF URI found for topic")
-            ))
+            // Step 1: Find primary StudyMaterial for the topic and use its fileUrl (content Uri) as PDF source.
+            val primaryMaterial = studyMaterialRepository.getPrimaryMaterialByTopic(topic.id)
+                ?: return@withContext Result.failure(Exception("No PDF attached to this topic"))
+
+            if (primaryMaterial.fileType.lowercase() != "pdf") {
+                return@withContext Result.failure(Exception("Primary material is not a PDF"))
+            }
+
+            val pdfUri = Uri.parse(primaryMaterial.fileUrl)
 
             val textResult = pdfExtractor.extractTextFromPdf(pdfUri)
             val extractedText = textResult.getOrElse {
